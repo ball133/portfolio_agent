@@ -2,6 +2,7 @@ name: Scheduled Portfolio Reports
 on:
   schedule:
     - cron: "30 13 * * 1-5"  # 13:30 UTC = 21:30 HKT (US market open, Mon-Fri)
+    - cron: "0 23 * * 0-6"  # 23:00 UTC = 07:00 HKT next day (daily)
   workflow_dispatch:  # Allows manual trigger from GitHub UI
 
 jobs:
