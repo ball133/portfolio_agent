@@ -20,16 +20,26 @@ MOCK_PRICES = {
 }
 
 
+def normalize_ticker(ticker: str) -> str:
+    """Remove any $ prefix, ensure HK tickers have correct zero-padding for yfinance."""
+    ticker = ticker.replace("$", "").strip().upper()
+    # yfinance HK format: 4-digit code + .HK
+    if ticker.endswith(".HK"):
+        code = ticker.replace(".HK", "")
+        ticker = f"{int(code):04d}.HK"
+    return ticker
+
+
 def is_hk_ticker(ticker: str) -> bool:
     return ticker.upper().endswith(".HK")
 
 
 def _yfinance_ticker_candidates(ticker: str):
-    ticker_upper = ticker.upper()
-    if not is_hk_ticker(ticker_upper):
-        return [ticker_upper]
+    normalized = normalize_ticker(ticker)
+    if not is_hk_ticker(normalized):
+        return [normalized]
 
-    root = ticker_upper[:-3]
+    root = normalized[:-3]
     candidate_roots = [root]
     if root.startswith("0") and len(root) > 1:
         candidate_roots.append(root[1:])
