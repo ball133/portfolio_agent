@@ -24,7 +24,7 @@ as primary classification. Replace with this taxonomy:
   LEVERAGED:    7226 or any 2x ETF — always flag separately, never aggregate
 
 For each layer present in the portfolio, output:
-  - Total weight in that layer
+  - Total weight in that layer (EXPLICITLY state it's "of the US sleeve" or "of the HK sleeve")
   - One-line role in the AI stack
 
 ### RULE 3 — Missing Exposure Language
@@ -38,12 +38,7 @@ If a ticker offers DISTINCT coverage not already in the portfolio, output:
 Only surface 0–2 names maximum per report. Zero is acceptable.
 
 ### RULE 4 — Position Tagging (required on every report)
-Tag every position using exactly these four labels:
-
-  CORE        = weight >8% AND directly in AI_COMPUTE or AI_CLOUD layer
-  SATELLITE   = weight <6% OR thesis not AI-infra primary
-  PROBLEM     = negative momentum AND thesis weakening
-  DEAD_WEIGHT = position where mandate fit is unclear or undocumented
+Use EXACTLY the tags from position_tags in the facts, including LEVERAGED for 7226.
 
 Output format (one line per position):
   {TICKER} | {TAG} | {one-line role or problem statement} | Thesis: {Intact/Watch/Broken}
@@ -54,22 +49,29 @@ Example:
   MSFT   | SATELLITE   | Too small to matter; scale or redeploy  | Thesis: Watch
   IBM    | DEAD_WEIGHT | No AI-infra mandate fit documented       | Thesis: Broken
   AVGO   | SATELLITE   | Networking silicon; small position       | Thesis: Intact
+  7226.HK| LEVERAGED   | 2x leveraged Hang Seng TECH ETF; high risk | Thesis: Watch
 
 ### RULE 5 — Verdict Section (required, always last)
 Every report MUST end with a "## Verdict" section.
 NEVER end with observations only.
-Output 1–3 actions maximum in this exact format:
+Output 1–4 actions maximum in this exact format:
 
   ACTION {n}: {BUY | TRIM | HOLD | EXIT | INVESTIGATE}
   Position: {TICKER}
   Rationale: {one sentence — what changes if you do this}
   Trigger: {specific condition that must be true first, or "Immediate"}
 
+CRITICAL: ALWAYS include an ACTION for 7226.HK (LEVERAGED) — it MUST be EXIT!
 Example:
+  ACTION 0: EXIT
+  Position: 7226.HK
+  Rationale: 2× 槓桿交易品，不符合「長期 AI infra compounder」的 mandate；韓股槓桿 ETF 案例已提供負面先例。
+  Trigger: Immediate
+
   ACTION 1: TRIM
   Position: GOOGL
   Rationale: At 29% weight, a 10% correction adds no new information
-  but creates a forced rebalance event — trim now on strength.
+  but creates a forced rebalance event — 在 GOOGL 走強時逐步降至 ~20%，部份資金留成現金等待 AI_COMPUTE 層回調，再分段加倉 NVDA/TSM；另一部份可以考慮降低整體 beta，而不是全數再壓回高度相關的 AI 名字。
   Trigger: Price holds above $330 this week.
 
   ACTION 2: EXIT or DOCUMENT

@@ -11,52 +11,81 @@ AI_STACK_LAYERS = {
 }
 
 
-def classify_ai_stack(weights: dict) -> dict:
+def classify_ai_stack(us_holdings: list, hk_holdings: list) -> dict:
     """
-    Returns layer weights and per-ticker tag.
-    weights = {ticker: float} where values sum to ~1.0
+    Returns layer weights (for US sleeve and global) and per-ticker layer.
     """
-    layer_weights = {layer: 0.0 for layer in AI_STACK_LAYERS}
+    us_total = sum(h["value"] for h in us_holdings)
+    hk_total = sum(h["value"] for h in hk_holdings)
+    
+    us_layer_weights = {layer: 0.0 for layer in AI_STACK_LAYERS}
+    global_layer_weights = {layer: 0.0 for layer in AI_STACK_LAYERS}
     ticker_layers = {}
-
-    for ticker, w in weights.items():
+    us_weights = {}
+    hk_weights = {}
+    global_weights = {}
+    
+    # Calculate US weights and layers
+    for h in us_holdings:
+        ticker = h["ticker"].upper()
+        w = h["value"] / us_total if us_total > 0 else 0.0
+        us_weights[ticker] = w
+        
         matched = False
         for layer, members in AI_STACK_LAYERS.items():
-            if ticker.upper() in {m.upper() for m in members}:
-                layer_weights[layer] += w
+            if ticker in {m.upper() for m in members}:
+                us_layer_weights[layer] += w
                 ticker_layers[ticker] = layer
                 matched = True
                 break
         if not matched:
-            layer_weights.setdefault("UNCLASSIFIED", 0.0)
-            layer_weights["UNCLASSIFIED"] += w
+            us_layer_weights.setdefault("UNCLASSIFIED", 0.0)
+            us_layer_weights["UNCLASSIFIED"] += w
+            ticker_layers[ticker] = "UNCLASSIFIED"
+            
+    # Calculate HK weights and layers
+    for h in hk_holdings:
+        ticker = h["ticker"].upper()
+        w = h["value"] / hk_total if hk_total > 0 else 0.0
+        hk_weights[ticker] = w
+        
+        matched = False
+        for layer, members in AI_STACK_LAYERS.items():
+            if ticker in {m.upper() for m in members}:
+                ticker_layers[ticker] = layer
+                matched = True
+                break
+        if not matched:
             ticker_layers[ticker] = "UNCLASSIFIED"
 
     return {
-        "layer_weights": layer_weights,
+        "us_layer_weights": us_layer_weights,
         "ticker_layers": ticker_layers,
+        "us_weights": us_weights,
+        "hk_weights": hk_weights,
+        "us_total": us_total,
+        "hk_total": hk_total,
     }
 
 
-def tag_positions(holdings: list, weights: dict,
-                  ticker_layers: dict) -> list:
+def tag_positions(us_holdings: list, hk_holdings: list,
+                  ticker_layers: dict, us_weights: dict, hk_weights: dict) -> list:
     """
-    Returns list of dicts with CORE/SATELLITE/PROBLEM/DEAD_WEIGHT tag.
-    holdings = list of {ticker, price, value, pct_change, ...}
+    Returns list of dicts with CORE/SATELLITE/PROBLEM/DEAD_WEIGHT/LEVERAGED tag.
     """
     tags = []
-    for h in holdings:
-        ticker  = h.get("ticker", "").upper()
-        weight  = weights.get(ticker, weights.get(h.get("ticker", ""), 0))
-        layer   = ticker_layers.get(ticker, "UNCLASSIFIED")
+    
+    # Tag US holdings
+    for h in us_holdings:
+        ticker = h["ticker"].upper()
+        layer = ticker_layers.get(ticker, "UNCLASSIFIED")
+        weight = us_weights.get(ticker, 0.0)
         momentum = h.get("pct_change", 0) or 0
 
         if weight > 0.08 and layer in ("AI_COMPUTE", "AI_CLOUD"):
             tag = "CORE"
         elif layer == "LEGACY_TECH":
             tag = "DEAD_WEIGHT"
-        elif weight < 0.06 or layer in ("UNCLASSIFIED", "HK_CONSUMER", "LEVERAGED"):
-            tag = "SATELLITE"
         else:
             tag = "SATELLITE"
 
@@ -64,12 +93,40 @@ def tag_positions(holdings: list, weights: dict,
             tag = "PROBLEM"
 
         tags.append({
-            "ticker":   ticker,
-            "tag":      tag,
-            "layer":    layer,
-            "weight":   weight,
+            "ticker": ticker,
+            "tag": tag,
+            "layer": layer,
+            "weight": weight,
+            "weight_in_sleeve": "US",
             "momentum": momentum,
         })
+        
+    # Tag HK holdings
+    for h in hk_holdings:
+        ticker = h["ticker"].upper()
+        layer = ticker_layers.get(ticker, "UNCLASSIFIED")
+        weight = hk_weights.get(ticker, 0.0)
+        momentum = h.get("pct_change", 0) or 0
+
+        if layer == "LEVERAGED":
+            tag = "LEVERAGED"
+        elif weight > 0.08 and layer == "HK_CONSUMER":
+            tag = "CORE"
+        else:
+            tag = "SATELLITE"
+
+        if momentum < -0.05 and tag != "CORE":
+            tag = "PROBLEM"
+
+        tags.append({
+            "ticker": ticker,
+            "tag": tag,
+            "layer": layer,
+            "weight": weight,
+            "weight_in_sleeve": "HK",
+            "momentum": momentum,
+        })
+        
     return tags
 
 

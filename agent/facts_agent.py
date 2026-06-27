@@ -187,19 +187,9 @@ def run_facts_pass() -> dict:
         else:
             data_quality_flags.append(f"news_missing_for_{holding['ticker']}")
 
-    # Combine US and HK holdings for AI stack classification and tagging
-    combined_holdings = holdings + hk_holdings
-    
-    # Compute weights for combined holdings (using original currency values for relative weight)
-    combined_total = sum(h["value"] for h in combined_holdings)
-    combined_weights = {}
-    if combined_total > 0:
-        for h in combined_holdings:
-            combined_weights[h["ticker"]] = h["value"] / combined_total
-
     # AI stack and position tags
-    stack = classify_ai_stack(combined_weights)
-    tags = tag_positions(combined_holdings, combined_weights, stack["ticker_layers"])
+    stack = classify_ai_stack(holdings, hk_holdings)
+    tags = tag_positions(holdings, hk_holdings, stack["ticker_layers"], stack["us_weights"], stack["hk_weights"])
 
     # Final facts JSON
     facts = {
@@ -222,7 +212,7 @@ def run_facts_pass() -> dict:
         "risk_metrics": risk_metrics,
         "rebalance_recommendations": rebalance_recommendations,
         "rebalance_note": rebalance_note,
-        "ai_stack": stack["layer_weights"],
+        "ai_stack": stack["us_layer_weights"],
         "position_tags": tags,
     }
 
