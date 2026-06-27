@@ -1,6 +1,77 @@
 """Risk metrics computation and snapshot price auditing functions."""
 from tools.prices import get_stock_price
 
+AI_STACK_LAYERS = {
+    "AI_COMPUTE":   {"NVDA", "TSM", "AVGO", "AMD", "MRVL", "MU"},
+    "AI_CLOUD":     {"MSFT", "GOOGL", "ORCL", "META", "AMZN"},
+    "LEGACY_TECH":  {"IBM", "INTC"},
+    "HK_CONSUMER":  {"9988", "0700", "9988.HK", "0700.HK",
+                     "09988.HK", "00700.HK"},
+    "LEVERAGED":    {"7226", "7226.HK", "LEVERAGED_ETF_HK"},
+}
+
+
+def classify_ai_stack(weights: dict) -> dict:
+    """
+    Returns layer weights and per-ticker tag.
+    weights = {ticker: float} where values sum to ~1.0
+    """
+    layer_weights = {layer: 0.0 for layer in AI_STACK_LAYERS}
+    ticker_layers = {}
+
+    for ticker, w in weights.items():
+        matched = False
+        for layer, members in AI_STACK_LAYERS.items():
+            if ticker.upper() in {m.upper() for m in members}:
+                layer_weights[layer] += w
+                ticker_layers[ticker] = layer
+                matched = True
+                break
+        if not matched:
+            layer_weights.setdefault("UNCLASSIFIED", 0.0)
+            layer_weights["UNCLASSIFIED"] += w
+            ticker_layers[ticker] = "UNCLASSIFIED"
+
+    return {
+        "layer_weights": layer_weights,
+        "ticker_layers": ticker_layers,
+    }
+
+
+def tag_positions(holdings: list, weights: dict,
+                  ticker_layers: dict) -> list:
+    """
+    Returns list of dicts with CORE/SATELLITE/PROBLEM/DEAD_WEIGHT tag.
+    holdings = list of {ticker, price, value, pct_change, ...}
+    """
+    tags = []
+    for h in holdings:
+        ticker  = h.get("ticker", "").upper()
+        weight  = weights.get(ticker, weights.get(h.get("ticker", ""), 0))
+        layer   = ticker_layers.get(ticker, "UNCLASSIFIED")
+        momentum = h.get("pct_change", 0) or 0
+
+        if weight > 0.08 and layer in ("AI_COMPUTE", "AI_CLOUD"):
+            tag = "CORE"
+        elif layer == "LEGACY_TECH":
+            tag = "DEAD_WEIGHT"
+        elif weight < 0.06 or layer in ("UNCLASSIFIED", "HK_CONSUMER", "LEVERAGED"):
+            tag = "SATELLITE"
+        else:
+            tag = "SATELLITE"
+
+        if momentum < -0.05 and tag != "CORE":
+            tag = "PROBLEM"
+
+        tags.append({
+            "ticker":   ticker,
+            "tag":      tag,
+            "layer":    layer,
+            "weight":   weight,
+            "momentum": momentum,
+        })
+    return tags
+
 
 def compute_risk_metrics(weights):
     """Compute risk metrics from portfolio weights dictionary."""

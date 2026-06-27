@@ -5,7 +5,7 @@ from tools.prices import get_stock_price, check_price_freshness
 from tools.performance import get_portfolio_performance
 from tools.ai_trends import get_ai_trend_stocks
 from tools.news import get_stock_news
-from tools.risk import audit_snapshot_prices, compute_risk_metrics
+from tools.risk import audit_snapshot_prices, compute_risk_metrics, classify_ai_stack, tag_positions
 
 COMPANY_KEYWORDS = {
     "NVDA": ["NVIDIA"],
@@ -187,6 +187,20 @@ def run_facts_pass() -> dict:
         else:
             data_quality_flags.append(f"news_missing_for_{holding['ticker']}")
 
+    # Combine US and HK holdings for AI stack classification and tagging
+    combined_holdings = holdings + hk_holdings
+    
+    # Compute weights for combined holdings (using original currency values for relative weight)
+    combined_total = sum(h["value"] for h in combined_holdings)
+    combined_weights = {}
+    if combined_total > 0:
+        for h in combined_holdings:
+            combined_weights[h["ticker"]] = h["value"] / combined_total
+
+    # AI stack and position tags
+    stack = classify_ai_stack(combined_weights)
+    tags = tag_positions(combined_holdings, combined_weights, stack["ticker_layers"])
+
     # Final facts JSON
     facts = {
         "snapshot_ts": snapshot_ts,
@@ -208,6 +222,8 @@ def run_facts_pass() -> dict:
         "risk_metrics": risk_metrics,
         "rebalance_recommendations": rebalance_recommendations,
         "rebalance_note": rebalance_note,
+        "ai_stack": stack["layer_weights"],
+        "position_tags": tags,
     }
 
     return facts

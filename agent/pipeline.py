@@ -334,7 +334,7 @@ def run_reliability_mode(deepseek_client=None):
         if critic_result["passed"]:
             validated_facts = critic_result["validated_facts"]
             print("📝 Phase3: Generating report...")
-            report = generate_narrative_report(validated_facts)
+            report = generate_narrative_report(validated_facts, deepseek_client=client)
 
             print("\n" + "="*60)
             print("📊 Reliability Analysis Report")
