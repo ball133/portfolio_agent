@@ -96,44 +96,44 @@ Example:
    📈  = positive momentum / unrealised gain > 20% 
    📉  = negative momentum / unrealised loss 
 
-### Bold keywords — always bold these in Telegram Markdown: 
-   - Every ticker symbol: *NVDA*, *GOOGL*, *TSM* 
-   - Every ACTION word: *EXIT*, *TRIM*, *HOLD* 
-   - Every tag: *CORE*, *SATELLITE*, *DEAD_WEIGHT* 
-   - Total portfolio value: *$12,765.78* 
-   - Effective N: *Effective N ≈ 4.4 names* 
-   - Trigger conditions: *Trigger: Immediate* 
+### Bold keywords — always bold these in HTML: 
+   - Every ticker symbol: <b>NVDA</b>, <b>GOOGL</b>, <b>TSM</b>
+   - Every ACTION word: <b>EXIT</b>, <b>TRIM</b>, <b>HOLD</b>
+   - Every tag: <b>CORE</b>, <b>SATELLITE</b>, <b>DEAD_WEIGHT</b>
+   - Total portfolio value: <b>$12,765.78</b>
+   - Effective N: <b>Effective N ≈ 4.4 names</b>
+   - Trigger conditions: <b>Trigger: Immediate</b>
 
 ### Section header format: 
    Use this pattern for every section: 
-   📊 *Portfolio Snapshot* 
-   🧠 *AI Stack Layers* 
-   🎯 *Position Tags* 
-   ⚖️  *Rebalance* 
-   ✅ *Verdict* 
+   📊 <b>Portfolio Snapshot</b>
+   🧠 <b>AI Stack Layers</b>
+   🎯 <b>Position Tags</b>
+   ⚖️  <b>Rebalance</b>
+   ✅ <b>Verdict</b>
 
 ### Position tag table format: 
-   ✅ *NVDA* | CORE | AI training backbone | Thesis: Intact 📈 
-   ✅ *TSM*  | CORE | AI silicon fab       | Thesis: Intact 📈 
-   ⚠️ *MSFT* | SATELLITE | Too small; scale or redeploy 
-   ⚰️ *IBM*  | DEAD_WEIGHT | No mandate fit | Thesis: Broken 📉 
-   💀 *7226.HK* | LEVERAGED | Exit immediately 
+   ✅ <b>NVDA</b> | CORE | AI training backbone | Thesis: Intact 📈 
+   ✅ <b>TSM</b>  | CORE | AI silicon fab       | Thesis: Intact 📈 
+   ⚠️ <b>MSFT</b> | SATELLITE | Too small; scale or redeploy 
+   ⚰️ <b>IBM</b>  | DEAD_WEIGHT | No mandate fit | Thesis: Broken 📉 
+   💀 <b>7226.HK</b> | LEVERAGED | Exit immediately 
 
 ### Verdict format: 
-   🔴 *ACTION 1: EXIT* 
-   Position: *7226.HK* 
+   🔴 <b>ACTION 1: EXIT</b>
+   Position: <b>7226.HK</b>
    Rationale: Leveraged decay violates mandate 
-   Trigger: *Immediate* 
+   Trigger: <b>Immediate</b>
 
-   🟡 *ACTION 2: TRIM* 
-   Position: *GOOGL* 
+   🟡 <b>ACTION 2: TRIM</b>
+   Position: <b>GOOGL</b>
    Rationale: 29% weight — trim to 20% on strength 
-   Trigger: *Price > $330* 
+   Trigger: <b>Price > $330</b>
 
-   🟢 *ACTION 4: HOLD* 
-   Position: *NVDA, TSM* 
+   🟢 <b>ACTION 4: HOLD</b>
+   Position: <b>NVDA, TSM</b>
    Rationale: Core thesis intact 
-   Trigger: *Quarterly review* 
+   Trigger: <b>Quarterly review</b> 
 
 ### Length rules: 
    - Executive Summary: max 3 sentences 

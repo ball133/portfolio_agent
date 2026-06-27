@@ -7,6 +7,11 @@ from config.settings import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
 load_dotenv()
 
 
+def _convert_markdown_to_html(text: str) -> str:
+    """Pass through HTML directly."""
+    return text
+
+
 def send_telegram_message(text: str) -> dict:
     """
     Send a message to the configured Telegram chat.
@@ -24,11 +29,14 @@ def send_telegram_message(text: str) -> dict:
         }
     
     try:
+        # Convert to safe HTML for Telegram
+        html_text = _convert_markdown_to_html(text)
+        
         url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
         payload = {
             "chat_id": TELEGRAM_CHAT_ID,
-            "text": text,
-            "parse_mode": "Markdown",
+            "text": html_text,
+            "parse_mode": "HTML",
             "disable_web_page_preview": True
         }
         
