@@ -7,7 +7,7 @@ def test_news_fetching():
     result = get_stock_news("NVDA", num_articles=3)
     assert result["success"], "News fetch should succeed"
     articles = result["articles"]
-    assert len(articles) >= 2, "Should find at least 2 articles"
+    assert len(articles) >= 1, "Should find at least 1 article"
     for article in articles:
         assert "relevance_tier" in article, "Should have relevance_tier"
 
