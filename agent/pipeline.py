@@ -294,6 +294,8 @@ def run_reliability_mode(deepseek_client=None):
     loop_records = []
     iteration = 1
     last_issues = []
+    last_facts = None
+    last_report = None
 
     if deepseek_client:
         client = deepseek_client
@@ -306,10 +308,12 @@ def run_reliability_mode(deepseek_client=None):
         print(f"🔍 [Iteration {iteration}] Running reliability-focused analysis...")
         print("   Phase 1: Collecting facts...")
         facts = run_facts_pass()
+        last_facts = facts
         print("✅ Facts collected!")
 
         print("📝 Phase 2: Generating report...")
         report = generate_narrative_report(facts, deepseek_client=client)
+        last_report = report
         print("✅ Report generated!")
 
         print("🔍 Phase 3: Critic pass validating facts & report...")
@@ -363,6 +367,21 @@ def run_reliability_mode(deepseek_client=None):
             return {"facts": validated_facts, "report": report}
 
         if iteration >= MAX_ITERATIONS:
+            # Even if critic didn't pass, save and return the last report we generated!
+            print("\n" + "="*60)
+            print("📊 Last Generated Report (critic didn't fully pass)")
+            print("="*60)
+            print(last_report)
+            print("="*60)
+            
+            last_facts_path = os.path.join(STATE_DIR, "last_facts.json")
+            with open(last_facts_path, "w") as f:
+                json.dump(last_facts, f, indent=2, default=str)
+            last_report_path = os.path.join(STATE_DIR, "last_report.txt")
+            with open(last_report_path, "w", encoding="utf-8") as f:
+                f.write(last_report)
+            print("   Facts & report saved to state/ for audit.")
+            
             final_record = {
                 "final_iteration": iteration,
                 "status": "STOPPED_MAX_ITERATIONS",
@@ -373,9 +392,10 @@ def run_reliability_mode(deepseek_client=None):
             _write_loop_state(loop_records)
 
             print("\n" + format_critic_issues(last_issues))
-            msg = f"[LOOP STOPPED] Could not produce a verified report after {MAX_ITERATIONS} iterations. Last issues: {last_issues}"
+            msg = f"[LOOP STOPPED] Could not produce a fully verified report after {MAX_ITERATIONS} iterations. Last issues: {last_issues}"
             print(msg)
-            return None
+            
+            return {"facts": last_facts, "report": last_report}
 
         print(f"   Issues found: {current_issues}")
         print(f"   Taking action: {action_taken}, retrying...")
