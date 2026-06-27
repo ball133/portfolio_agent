@@ -1,5 +1,9 @@
 """Configuration constants and paths for the portfolio agent."""
 import os
+from dotenv import load_dotenv
+
+# Load environment variables first
+load_dotenv()
 
 # Base directories
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
