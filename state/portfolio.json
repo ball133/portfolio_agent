@@ -9,7 +9,8 @@
   },
   "hk_holdings": {
     "09988.HK": 100,
-    "00700.HK": 100
+    "00700.HK": 100,
+    "7226.HK": 5400
   },
   "cost_basis": {
     "TSM": 229.80,
@@ -19,7 +20,8 @@
     "GOOGL": 192.85,
     "AVGO": 415.22,
     "09988.HK": 124.43,
-    "00700.HK": 394.80
+    "00700.HK": 394.80,
+    "7226.HK": 2.84
   },
   "notes": "HK positions tracked separately due to currency. Leveraged ETF excluded from agent analysis."
 }
