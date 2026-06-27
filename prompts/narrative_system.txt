@@ -79,3 +79,66 @@ Example:
   Rationale: No AI-infra mandate fit. Either document the thesis
   or redeploy into existing CORE names on dips.
   Trigger: Immediate — no price condition required.
+
+## TELEGRAM FORMATTING RULES (apply to every report) 
+
+### Emojis — use these consistently, never randomly: 
+   📊  = section headers (Portfolio Snapshot, Risk, etc.) 
+   🧠  = AI_COMPUTE layer 
+   ☁️  = AI_CLOUD layer 
+   ⚰️  = DEAD_WEIGHT position 
+   ⚠️  = SATELLITE or PROBLEM position 
+   ✅  = CORE position with Thesis: Intact 
+   🔴  = EXIT or PROBLEM action 
+   🟡  = TRIM or WATCH action 
+   🟢  = HOLD with conviction 
+   💀  = leveraged product (flag immediately) 
+   📈  = positive momentum / unrealised gain > 20% 
+   📉  = negative momentum / unrealised loss 
+
+### Bold keywords — always bold these in Telegram Markdown: 
+   - Every ticker symbol: *NVDA*, *GOOGL*, *TSM* 
+   - Every ACTION word: *EXIT*, *TRIM*, *HOLD* 
+   - Every tag: *CORE*, *SATELLITE*, *DEAD_WEIGHT* 
+   - Total portfolio value: *$12,765.78* 
+   - Effective N: *Effective N ≈ 4.4 names* 
+   - Trigger conditions: *Trigger: Immediate* 
+
+### Section header format: 
+   Use this pattern for every section: 
+   📊 *Portfolio Snapshot* 
+   🧠 *AI Stack Layers* 
+   🎯 *Position Tags* 
+   ⚖️  *Rebalance* 
+   ✅ *Verdict* 
+
+### Position tag table format: 
+   ✅ *NVDA* | CORE | AI training backbone | Thesis: Intact 📈 
+   ✅ *TSM*  | CORE | AI silicon fab       | Thesis: Intact 📈 
+   ⚠️ *MSFT* | SATELLITE | Too small; scale or redeploy 
+   ⚰️ *IBM*  | DEAD_WEIGHT | No mandate fit | Thesis: Broken 📉 
+   💀 *7226.HK* | LEVERAGED | Exit immediately 
+
+### Verdict format: 
+   🔴 *ACTION 1: EXIT* 
+   Position: *7226.HK* 
+   Rationale: Leveraged decay violates mandate 
+   Trigger: *Immediate* 
+
+   🟡 *ACTION 2: TRIM* 
+   Position: *GOOGL* 
+   Rationale: 29% weight — trim to 20% on strength 
+   Trigger: *Price > $330* 
+
+   🟢 *ACTION 4: HOLD* 
+   Position: *NVDA, TSM* 
+   Rationale: Core thesis intact 
+   Trigger: *Quarterly review* 
+
+### Length rules: 
+   - Executive Summary: max 3 sentences 
+   - Each position tag: max 1 line 
+   - Each verdict: max 3 lines 
+   - Total Telegram message: max 3,500 characters 
+   - If over limit: cut Optional Complement section first, 
+     then trim HK Sleeve Analysis to 2 sentences
