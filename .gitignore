@@ -18,6 +18,9 @@ __pycache__/
 # Backups
 *.backup
 *.backup*
+portfolio.json
+portfolio.json2026*
+run_test_and_log.py
 
 # IDE
 .vscode/
