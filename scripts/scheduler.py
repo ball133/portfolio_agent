@@ -12,6 +12,7 @@ sys.path.insert(0, PROJECT_ROOT)
 from agent.narrative_agent import generate_narrative_report
 from agent.pipeline import run_reliability_mode
 from config.settings import LOG_DIR
+from tools.telegram import send_telegram_message
 
 US_HOLIDAYS_2026 = {
     "2026-01-01",
@@ -63,6 +64,15 @@ def run_pipeline_once(force: bool = False):
         summary = "[SCHEDULER] Pipeline returned no verified result."
     with open(log_path, "w", encoding="utf-8") as file_obj:
         file_obj.write(summary)
+    
+    # Send to Telegram if configured
+    print(f"[{ts}] Sending report to Telegram...")
+    telegram_result = send_telegram_message(summary)
+    if telegram_result["success"]:
+        print(f"[{ts}] Telegram report sent successfully!")
+    else:
+        print(f"[{ts}] Failed to send Telegram report: {telegram_result['error']}")
+    
     print(f"[{ts}] Done -> {log_path}")
     return log_path
 

@@ -1,0 +1,40 @@
+"""Telegram integration for sending portfolio reports."""
+import os
+from dotenv import load_dotenv
+import requests
+from config.settings import TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID
+
+load_dotenv()
+
+
+def send_telegram_message(text: str) -> dict:
+    """
+    Send a message to the configured Telegram chat.
+    
+    Args:
+        text: The message text to send
+        
+    Returns:
+        dict with success status and any error message
+    """
+    if not TELEGRAM_BOT_TOKEN or not TELEGRAM_CHAT_ID:
+        return {
+            "success": False,
+            "error": "Telegram credentials not set (TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)"
+        }
+    
+    try:
+        url = f"https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": TELEGRAM_CHAT_ID,
+            "text": text,
+            "parse_mode": "Markdown",
+            "disable_web_page_preview": True
+        }
+        
+        response = requests.post(url, json=payload, timeout=30)
+        response.raise_for_status()
+        
+        return {"success": True}
+    except Exception as e:
+        return {"success": False, "error": str(e)}

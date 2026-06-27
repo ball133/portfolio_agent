@@ -45,3 +45,7 @@ AI_TREND_STOCKS = [
 # Loop framework settings
 MAX_ITERATIONS = 3
 TOKEN_BUDGET_WARNING = 50000
+
+# Telegram integration settings
+TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
