@@ -24,9 +24,6 @@ def validate_environment():
         raise RuntimeError("[ERROR] DEEPSEEK_API_KEY not set. Add it to .env")
 
 
-validate_environment()
-
-
 def get_tools_definition():
     return [
         {
@@ -142,6 +139,7 @@ def execute_tool(function_name, function_args):
 
 
 def process_single_question(question):
+    validate_environment()
     deepseek_key = os.getenv("DEEPSEEK_API_KEY")
     deepseek_base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
     client = OpenAI(api_key=deepseek_key, base_url=deepseek_base_url)
@@ -183,6 +181,7 @@ def process_single_question(question):
 
 
 def run_interactive_mode():
+    validate_environment()
     deepseek_key = os.getenv("DEEPSEEK_API_KEY")
     deepseek_base_url = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/v1")
     client = OpenAI(api_key=deepseek_key, base_url=deepseek_base_url)
@@ -289,6 +288,9 @@ def _assess_facts_quality(facts):
 
 def run_reliability_mode(deepseek_client=None):
     """Run reliability-focused analysis with Loop framework (facts → critic → narrative)."""
+    if not deepseek_client:
+        validate_environment()
+    
     loop_records = []
     iteration = 1
     last_issues = []
