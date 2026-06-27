@@ -1,0 +1,25 @@
+{
+  "holdings": {
+    "TSM": 7,
+    "NVDA": 18,
+    "MSFT": 2,
+    "IBM": 4,
+    "GOOGL": 11,
+    "AVGO": 2
+  },
+  "hk_holdings": {
+    "09988.HK": 100,
+    "00700.HK": 100
+  },
+  "cost_basis": {
+    "TSM": 229.80,
+    "NVDA": 156.68,
+    "MSFT": 410.53,
+    "IBM": 275.65,
+    "GOOGL": 192.85,
+    "AVGO": 415.22,
+    "09988.HK": 124.43,
+    "00700.HK": 394.80
+  },
+  "notes": "HK positions tracked separately due to currency. Leveraged ETF excluded from agent analysis."
+}

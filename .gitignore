@@ -1,0 +1,26 @@
+# State files (portfolio data)
+state/*
+!state/portfolio.json
+
+# Logs
+logs/
+*.log
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment variables
+.env
+
+# Backups
+*.backup
+*.backup*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
