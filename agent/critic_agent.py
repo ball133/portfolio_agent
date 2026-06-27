@@ -30,7 +30,7 @@ def _get_critic_system_prompt():
     return _critic_system_prompt
 
 
-def run_critic_pass(facts: dict, deepseek_client=None) -> dict:
+def run_critic_pass(facts: dict, report: str = "", deepseek_client=None) -> dict:
     if deepseek_client:
         client = deepseek_client
     else:
@@ -85,12 +85,16 @@ def run_critic_pass(facts: dict, deepseek_client=None) -> dict:
         if ticker not in holdings_tickers:
             issues.append(f"News article for {ticker} not in portfolio holdings: {headline}")
 
-    # Now run DeepSeek Critic as specified
+    # Now run DeepSeek Critic on the REPORT for the new rules if report is provided
+    if report:
+        user_content = f"FACTS:\n{json.dumps(facts, indent=2)}\n\nREPORT:\n{report}"
+    else:
+        user_content = json.dumps(facts, indent=2)
     resp = client.chat.completions.create(
         model="deepseek-reasoner",
         messages=[
             {"role": "system", "content": _get_critic_system_prompt()},
-            {"role": "user",   "content": json.dumps(facts, indent=2)}
+            {"role": "user",   "content": user_content}
         ]
     )
     raw = resp.choices[0].message.content

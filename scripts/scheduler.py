@@ -57,9 +57,9 @@ def run_pipeline_once(force: bool = False):
     log_path = os.path.join(LOG_DIR, "agent_runs", f"{ts}.log")
     os.makedirs(os.path.dirname(log_path), exist_ok=True)
     print(f"[{ts}] Running pipeline...")
-    result = run_reliability_mode()
-    if result:
-        summary = generate_narrative_report(result)
+    pipeline_result = run_reliability_mode()
+    if pipeline_result and "report" in pipeline_result:
+        summary = pipeline_result["report"]
     else:
         summary = "[SCHEDULER] Pipeline returned no verified result."
     with open(log_path, "w", encoding="utf-8") as file_obj:

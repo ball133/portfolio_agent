@@ -308,8 +308,12 @@ def run_reliability_mode(deepseek_client=None):
         facts = run_facts_pass()
         print("✅ Facts collected!")
 
-        print("🔍 Phase 2: Critic pass validating & computing risk...")
-        critic_result = run_critic_pass(facts, deepseek_client=client)
+        print("📝 Phase 2: Generating report...")
+        report = generate_narrative_report(facts, deepseek_client=client)
+        print("✅ Report generated!")
+
+        print("🔍 Phase 3: Critic pass validating facts & report...")
+        critic_result = run_critic_pass(facts, report, deepseek_client=client)
         print("✅ Critic pass done!")
 
         facts_quality = _assess_facts_quality(facts)
@@ -333,8 +337,6 @@ def run_reliability_mode(deepseek_client=None):
 
         if critic_result["passed"]:
             validated_facts = critic_result["validated_facts"]
-            print("📝 Phase3: Generating report...")
-            report = generate_narrative_report(validated_facts, deepseek_client=client)
 
             print("\n" + "="*60)
             print("📊 Reliability Analysis Report")
@@ -345,7 +347,10 @@ def run_reliability_mode(deepseek_client=None):
             last_facts_path = os.path.join(STATE_DIR, "last_facts.json")
             with open(last_facts_path, "w") as f:
                 json.dump(validated_facts, f, indent=2, default=str)
-            print("   Facts saved to last_facts.json for audit.")
+            last_report_path = os.path.join(STATE_DIR, "last_report.txt")
+            with open(last_report_path, "w", encoding="utf-8") as f:
+                f.write(report)
+            print("   Facts & report saved to state/ for audit.")
 
             final_record = {
                 "final_iteration": iteration,
@@ -355,7 +360,7 @@ def run_reliability_mode(deepseek_client=None):
             loop_records.append(final_record)
             _write_loop_state(loop_records)
 
-            return validated_facts
+            return {"facts": validated_facts, "report": report}
 
         if iteration >= MAX_ITERATIONS:
             final_record = {
