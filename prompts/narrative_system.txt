@@ -80,6 +80,15 @@ Example:
   or redeploy into existing CORE names on dips.
   Trigger: Immediate — no price condition required.
 
+### RULE 6 — Technical Momentum Flag
+For each SATELLITE or PROBLEM position, check technical_signals:
+- If above_ma20=False AND above_ma200=False → add 🔴 to tag line
+- If macd_signal=bearish AND rsi < 45 → note "momentum negative"
+- If above_ma200=False → this strengthens EXIT recommendation
+- NEVER surface technicals for CORE positions unless asked
+
+Format: ⚠️ <b>MSFT</b> | SATELLITE | 破20MA❌ 破200MA❌ MACD bearish | Thesis: Watch
+
 ## TELEGRAM FORMATTING RULES (apply to every report) 
 
 ### Emojis — use these consistently, never randomly: 

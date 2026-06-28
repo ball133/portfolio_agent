@@ -18,5 +18,5 @@ Additional checks (applied after existing rules):
   at least one ACTION → flag: "Rule 5 violated: Verdict
   section missing"
 - If any position with weight >8% is not tagged
-  CORE/SATELLITE/PROBLEM/DEAD_WEIGHT → flag: "Rule 4
+  CORE/SATELLITE/PROBLEM/DEAD_WEIGHT/LEVERAGED → flag: "Rule 4
   violated: position tags missing"

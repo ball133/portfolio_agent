@@ -1,7 +1,7 @@
 """Facts pass: collect and assemble facts-only JSON summary."""
 from datetime import datetime, timedelta
 from tools.portfolio import load_portfolio_groups, load_portfolio_history, load_portfolio_state
-from tools.prices import get_stock_price, check_price_freshness
+from tools.prices import get_stock_price, check_price_freshness, get_technical_signals
 from tools.performance import get_portfolio_performance
 from tools.ai_trends import get_ai_trend_stocks
 from tools.news import get_stock_news
@@ -191,6 +191,13 @@ def run_facts_pass() -> dict:
     stack = classify_ai_stack(holdings, hk_holdings)
     tags = tag_positions(holdings, hk_holdings, stack["ticker_layers"], stack["us_weights"], stack["hk_weights"])
 
+    # Technical signals
+    us_tickers = list(us_portfolio.keys())
+    technical_signals = {
+        t: get_technical_signals(t)
+        for t in us_tickers
+    }
+
     # Final facts JSON
     facts = {
         "snapshot_ts": snapshot_ts,
@@ -214,6 +221,7 @@ def run_facts_pass() -> dict:
         "rebalance_note": rebalance_note,
         "ai_stack": stack["us_layer_weights"],
         "position_tags": tags,
+        "technical_signals": technical_signals,
     }
 
     return facts

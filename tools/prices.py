@@ -140,6 +140,52 @@ def get_portfolio_price_map():
     return price_map
 
 
+def get_technical_signals(ticker: str) -> dict:
+    """Get technical momentum signals (MA20, MA200, MACD, RSI) for a US ticker."""
+    normalized = normalize_ticker(ticker)
+    if is_hk_ticker(normalized):
+        return {"available": False}
+        
+    try:
+        t = yf.Ticker(normalized)
+        hist = t.history(period="1y")
+        if hist.empty or len(hist) < 200:
+            return {"available": False}
+
+        close = hist["Close"]
+        ma20 = close.rolling(20).mean().iloc[-1]
+        ma200 = close.rolling(200).mean().iloc[-1]
+        price = close.iloc[-1]
+
+        # MACD: 12/26/9
+        ema12 = close.ewm(span=12).mean()
+        ema26 = close.ewm(span=26).mean()
+        macd = (ema12 - ema26).iloc[-1]
+
+        # RSI 14
+        delta = close.diff()
+        gain = delta.clip(lower=0).rolling(14).mean()
+        loss = (-delta.clip(upper=0)).rolling(14).mean()
+        rs = gain.iloc[-1] / loss.iloc[-1] if loss.iloc[-1] != 0 else 0
+        rsi = 100 - (100 / (1 + rs))
+
+        return {
+            "price": round(float(price), 2),
+            "ma20": round(float(ma20), 2),
+            "ma200": round(float(ma200), 2),
+            "above_ma20": bool(price > ma20),
+            "above_ma200": bool(price > ma200),
+            "macd": round(float(macd), 2),
+            "macd_signal": "bullish" if macd > 0 else "bearish",
+            "rsi": round(float(rsi), 1),
+            "rsi_signal": "oversold" if rsi < 30 else
+                          "overbought" if rsi > 70 else "neutral",
+            "available": True
+        }
+    except Exception:
+        return {"available": False}
+
+
 def check_price_freshness(prices_dict):
     """Check price freshness (less than 15 min = fresh)."""
     result = {}
