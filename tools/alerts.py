@@ -131,14 +131,14 @@ def get_sell_signals(position_tags: list, holdings_prices: dict) -> list:
         thesis = pos.get("thesis_status", "Unknown")
         base_threshold = SELL_THRESHOLDS.get(tag, 2)
 
-        # CORE with intact thesis requires 4/4 to fire
-        # (i.e. never fires — only DEAD_WEIGHT/LEVERAGED override)
-        if tag == "CORE" and thesis == "Intact":
-            threshold = 4
-        # SATELLITE with intact thesis requires 3/4
-        elif tag == "SATELLITE" and thesis == "Intact":
-            threshold = 3
-        # All other cases use default thresholds
+        if tag in ("DEAD_WEIGHT", "LEVERAGED"):
+            threshold = 0       # Always fires
+        elif thesis == "Broken":
+            threshold = base_threshold  # 3 for CORE, 2 for SAT
+        elif thesis == "Watch":
+            threshold = base_threshold + 1  # 4 for CORE, 3 for SAT
+        elif thesis == "Intact":
+            threshold = 99      # Never fires
         else:
             threshold = base_threshold
         tech = get_technical_score(ticker)
