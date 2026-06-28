@@ -6,6 +6,8 @@ from tools.performance import get_portfolio_performance
 from tools.ai_trends import get_ai_trend_stocks
 from tools.news import get_stock_news
 from tools.risk import audit_snapshot_prices, compute_risk_metrics, classify_ai_stack, tag_positions
+from tools.thesis import evaluate_thesis
+from tools.alerts import get_technical_score
 
 COMPANY_KEYWORDS = {
     "NVDA": ["NVIDIA"],
@@ -191,12 +193,24 @@ def run_facts_pass() -> dict:
     stack = classify_ai_stack(holdings, hk_holdings)
     tags = tag_positions(holdings, hk_holdings, stack["ticker_layers"], stack["us_weights"], stack["hk_weights"])
 
-    # Technical signals
+    # Technical signals + thesis evaluation
     us_tickers = list(us_portfolio.keys())
-    technical_signals = {
-        t: get_technical_signals(t)
-        for t in us_tickers
-    }
+    technical_signals = {}
+    ticker_news = {t: [] for t in us_tickers + list(hk_portfolio.keys())}
+    for n in news:
+        if n["ticker"] in ticker_news:
+            ticker_news[n["ticker"]].append(n["headline"])
+
+    for i, pos in enumerate(tags):
+        ticker = pos["ticker"]
+        technical = get_technical_score(ticker)
+        technical_signals[ticker] = technical
+        pos["thesis_status"] = evaluate_thesis(
+            ticker,
+            pos["tag"],
+            technical,
+            ticker_news.get(ticker, [])
+        )
 
     # Final facts JSON
     facts = {

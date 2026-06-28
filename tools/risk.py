@@ -99,7 +99,6 @@ def tag_positions(us_holdings: list, hk_holdings: list,
             "weight": weight,
             "weight_in_sleeve": "US",
             "momentum": momentum,
-            "thesis_status": "Broken" if tag == "DEAD_WEIGHT" else "Watch" if ticker == "MSFT" else "Intact",
         })
         
     # Tag HK holdings
@@ -126,7 +125,6 @@ def tag_positions(us_holdings: list, hk_holdings: list,
             "weight": weight,
             "weight_in_sleeve": "HK",
             "momentum": momentum,
-            "thesis_status": "Broken" if tag == "LEVERAGED" else "Intact",
         })
         
     return tags
