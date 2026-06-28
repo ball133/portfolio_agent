@@ -158,6 +158,82 @@ def get_sell_signals(position_tags: list, holdings_prices: dict) -> list:
         if not label:
             continue
 
+        # ── GUARD 1: 52-week low proximity ──────────────
+        # Suppress if price is within 5% of 52w low.
+        # Near-low = oversold exhaustion, not thesis break.
+        try:
+            _hist = yf.Ticker(ticker).history(period="1y")
+            low_52w = _hist["Close"].min() \
+                      if not _hist.empty else 0
+            last_price = tech.get("price", 0)
+            pct_from_low = (
+                (last_price - low_52w) / low_52w * 100
+                if low_52w > 0 else 99
+            )
+        except Exception:
+            pct_from_low = 99
+            _hist = None
+
+        if (pct_from_low < 5 and
+                tag not in ("DEAD_WEIGHT", "LEVERAGED")):
+            signals.append({
+                "ticker": ticker,
+                "tag": tag,
+                "score": score,
+                "label": "SUPPRESSED",
+                "priority": "⚪",
+                "message": (
+                    f"⚪ *{ticker} SELL SUPPRESSED*\n"
+                    f"📊 Tag: {tag} | Weight: "
+                    f"{weight*100:.1f}%\n"
+                    f"💰 Price: ${last_price:.2f} "
+                    f"({pct_from_low:.1f}% above 52w low "
+                    f"${low_52w:.2f})\n"
+                    f"⚠️ Near 52w low — oversold, "
+                    f"not thesis break. Watching."
+                ),
+                "fire_key": None,
+            })
+            continue
+
+        # ── GUARD 2: Recent strong rebound ───────────────
+        # Suppress if last session returned > 3%.
+        # Strong single-session rebound = reversal signal.
+        try:
+            if _hist is not None and len(_hist) >= 2:
+                prev_close = _hist["Close"].iloc[-2]
+                last_close = _hist["Close"].iloc[-1]
+                session_return = (
+                    (last_close - prev_close)
+                    / prev_close * 100
+                )
+            else:
+                session_return = 0
+        except Exception:
+            session_return = 0
+
+        if (session_return > 3.0 and
+                tag not in ("DEAD_WEIGHT", "LEVERAGED")):
+            signals.append({
+                "ticker": ticker,
+                "tag": tag,
+                "score": score,
+                "label": "SUPPRESSED",
+                "priority": "⚪",
+                "message": (
+                    f"⚪ *{ticker} SELL SUPPRESSED*\n"
+                    f"📊 Tag: {tag} | Weight: "
+                    f"{weight*100:.1f}%\n"
+                    f"💰 Price: ${last_price:.2f} "
+                    f"({session_return:+.1f}% last session)\n"
+                    f"⚠️ Strong rebound detected — "
+                    f"watching for 3rd confirmation "
+                    f"next session."
+                ),
+                "fire_key": None,
+            })
+            continue
+
         alert_key = f"{ticker}_{today}_sell_{label}"
         if alert_key in fired_state:
             continue
