@@ -13,6 +13,9 @@ from agent.narrative_agent import generate_narrative_report
 from agent.pipeline import run_reliability_mode
 from config.settings import LOG_DIR
 from tools.telegram import send_telegram_message
+from tools.alerts import evaluate_alerts, get_sell_signals
+from tools.prices import get_stock_price
+from tools.portfolio import load_portfolio_groups
 
 US_HOLIDAYS_2026 = {
     "2026-01-01",
@@ -60,6 +63,29 @@ def run_pipeline_once(force: bool = False):
     pipeline_result = run_reliability_mode()
     if pipeline_result and "report" in pipeline_result:
         summary = pipeline_result["report"]
+        facts = pipeline_result.get("facts", {})
+        
+        # Build price dict
+        price_dict = {}
+        portfolio_groups = load_portfolio_groups()
+        for ticker in portfolio_groups.get("US", {}).keys():
+            price_result = get_stock_price(ticker)
+            price_dict[ticker] = price_result
+        for ticker in portfolio_groups.get("HK", {}).keys():
+            price_result = get_stock_price(ticker)
+            price_dict[ticker] = price_result
+        
+        # 1. Fire monitoring alerts (MA reclaim, breach, reminders)
+        alerts = evaluate_alerts(facts.get("position_tags", []), price_dict)
+        for alert in alerts:
+            print(f"[{ts}] Sending alert: {alert.get('ticker', 'Unknown')}")
+            send_telegram_message(alert["message"])
+        
+        # 2. Fire sell signals (multi-factor confirmation)
+        sell_signals = get_sell_signals(facts.get("position_tags", []), price_dict)
+        for sig in sell_signals:
+            print(f"[SELL] {sig['ticker']}: {sig['label']} ({sig['score']}/4)")
+            send_telegram_message(sig["message"])
     else:
         summary = "[SCHEDULER] Pipeline returned no verified result."
     with open(log_path, "w", encoding="utf-8") as file_obj:
