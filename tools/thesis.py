@@ -106,7 +106,11 @@ def evaluate_thesis(
 
     # WATCH conditions
     # W1: technical score ≥3/4 bearish
-    if technical.get("score", 0) >= 3:
+    # SATELLITE: requires 4/4 to flip Watch on
+    # technicals alone (narrative must confirm for 3/4)
+    tech_watch_threshold = 3 \
+        if tag == "CORE" else 4
+    if technical.get("score", 0) >= tech_watch_threshold:
         streak = watch_streak + 1 \
             if prev_status == "Watch" else 1
         return _persist(
