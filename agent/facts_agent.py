@@ -1,12 +1,15 @@
 """Facts pass: collect and assemble facts-only JSON summary."""
 from datetime import datetime, timedelta
-from tools.portfolio import load_portfolio_groups, load_portfolio_history, load_portfolio_state
+from tools.portfolio import (
+    load_portfolio_groups, load_portfolio_history, load_portfolio_state,
+    get_all_positions
+)
 from tools.prices import get_stock_price, check_price_freshness, get_technical_signals
 from tools.performance import get_portfolio_performance
 from tools.ai_trends import get_ai_trend_stocks
 from tools.news import get_stock_news
-from tools.risk import audit_snapshot_prices, compute_risk_metrics, classify_ai_stack, tag_positions
-from tools.thesis import evaluate_thesis
+from tools.risk import audit_snapshot_prices, compute_risk_metrics, classify_ai_stack
+from tools.thesis import evaluate_all_thesis
 from tools.alerts import get_technical_score
 
 COMPANY_KEYWORDS = {
@@ -189,12 +192,11 @@ def run_facts_pass() -> dict:
         else:
             data_quality_flags.append(f"news_missing_for_{holding['ticker']}")
 
-    # AI stack and position tags
+    # Get stack for facts (still need for ai_stack in output)
     stack = classify_ai_stack(holdings, hk_holdings)
-    position_tags = tag_positions(holdings, hk_holdings, stack["ticker_layers"], stack["us_weights"], stack["hk_weights"])
 
-    from tools.thesis import evaluate_all_thesis
-    from tools.alerts import get_technical_score
+    # Use get_all_positions() for position tags from new portfolio system
+    position_tags = get_all_positions()
 
     technicals = {
         pos["ticker"]: get_technical_score(pos["ticker"])

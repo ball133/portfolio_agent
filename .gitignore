@@ -1,6 +1,8 @@
 # State files (portfolio data)
 state/*
 !state/portfolio.json
+data/
+!data/portfolio.json
 
 # Logs
 logs/

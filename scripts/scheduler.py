@@ -15,7 +15,7 @@ from config.settings import LOG_DIR
 from tools.telegram import send_telegram_message
 from tools.alerts import evaluate_alerts, get_sell_signals, get_buy_signals
 from tools.prices import get_stock_price
-from tools.portfolio import load_portfolio_groups
+from tools.portfolio import list_tickers
 
 US_HOLIDAYS_2026 = {
     "2026-01-01",
@@ -67,11 +67,8 @@ def run_pipeline_once(force: bool = False):
         
         # Build price dict
         price_dict = {}
-        portfolio_groups = load_portfolio_groups()
-        for ticker in portfolio_groups.get("US", {}).keys():
-            price_result = get_stock_price(ticker)
-            price_dict[ticker] = price_result
-        for ticker in portfolio_groups.get("HK", {}).keys():
+        all_tickers = list_tickers()
+        for ticker in all_tickers:
             price_result = get_stock_price(ticker)
             price_dict[ticker] = price_result
         

@@ -264,3 +264,133 @@ def reset_performance_history(keep_latest=0):
         json.dump(keep_history, f, indent=2)
 
     print(f"[SUCCESS] Archived {len(archive_history)} snapshots, kept {len(keep_history)}.")
+
+
+# ================================================
+# NEW: Dynamic portfolio management (data/portfolio.json)
+# ================================================
+from datetime import date
+
+DYNAMIC_PORTFOLIO_FILE = "data/portfolio.json"
+
+
+def _load_dynamic() -> dict:
+    with open(DYNAMIC_PORTFOLIO_FILE, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _save_dynamic(data: dict):
+    os.makedirs("data", exist_ok=True)
+    with open(DYNAMIC_PORTFOLIO_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, indent=2)
+
+
+def get_all_positions() -> list:
+    """Return flat list of all positions, all sleeves."""
+    data = _load_dynamic()
+    result = []
+    for sleeve, sleeve_data in data["sleeves"].items():
+        for pos in sleeve_data["positions"]:
+            result.append({**pos, "sleeve": sleeve, "currency": sleeve_data["currency"]})
+    return result
+
+
+def get_position(ticker: str) -> dict | None:
+    """Return single position dict or None."""
+    return next((p for p in get_all_positions() if p["ticker"] == ticker), None)
+
+
+def add_position(
+    sleeve: str,
+    ticker: str,
+    tag: str,
+    weight: float,
+    thesis_note: str,
+    thesis_status: str = "Intact",
+    scale_trigger: float = None,
+    core_eligible_at: float = None,
+) -> dict:
+    """
+    Add a new position to a sleeve.
+    Raises ValueError if ticker already exists.
+    """
+    data = _load_dynamic()
+    positions = data["sleeves"][sleeve]["positions"]
+    if any(p["ticker"] == ticker for p in positions):
+        raise ValueError(f"{ticker} already exists in {sleeve}")
+    new_pos = {
+        "ticker": ticker,
+        "tag": tag,
+        "weight": round(weight, 4),
+        "thesis_status": thesis_status,
+        "thesis_note": thesis_note,
+        "scale_trigger": scale_trigger,
+        "core_eligible_at": core_eligible_at,
+        "added_date": date.today().isoformat(),
+    }
+    positions.append(new_pos)
+    _save_dynamic(data)
+    return new_pos
+
+
+def remove_position(ticker: str) -> bool:
+    """
+    Remove position by ticker across all sleeves.
+    Returns True if removed, False if not found.
+    """
+    data = _load_dynamic()
+    found = False
+    for sleeve_data in data["sleeves"].values():
+        before = len(sleeve_data["positions"])
+        sleeve_data["positions"] = [p for p in sleeve_data["positions"] if p["ticker"] != ticker]
+        if len(sleeve_data["positions"]) < before:
+            found = True
+    if found:
+        _save_dynamic(data)
+    return found
+
+
+def update_position(ticker: str, **kwargs) -> dict | None:
+    """
+    Update any field on an existing position.
+    Example: update_position("MSFT", thesis_status="Intact", weight=0.10)
+    Returns updated position or None if not found.
+    """
+    data = _load_dynamic()
+    found = None
+    for sleeve_data in data["sleeves"].values():
+        for pos in sleeve_data["positions"]:
+            if pos["ticker"] == ticker:
+                pos.update(kwargs)
+                found = pos
+    if found:
+        _save_dynamic(data)
+    return found
+
+
+def update_weight(ticker: str, new_weight: float) -> dict | None:
+    """Convenience wrapper for weight update."""
+    return update_position(ticker, weight=round(new_weight, 4))
+
+
+def retag(ticker: str, new_tag: str, new_thesis_status: str = None) -> dict | None:
+    """
+    Change position tag. Optionally update thesis.
+    Example: retag("MSFT", "CORE", "Intact")
+    """
+    kwargs = {"tag": new_tag}
+    if new_thesis_status:
+        kwargs["thesis_status"] = new_thesis_status
+    return update_position(ticker, **kwargs)
+
+
+def get_mandate() -> dict:
+    return _load_dynamic()["mandate"]
+
+
+def list_tickers(sleeve: str = None) -> list:
+    """Return list of ticker strings."""
+    positions = get_all_positions()
+    if sleeve:
+        positions = [p for p in positions if p["sleeve"] == sleeve]
+    return [p["ticker"] for p in positions]
