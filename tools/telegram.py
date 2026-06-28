@@ -8,7 +8,13 @@ load_dotenv()
 
 
 def _convert_markdown_to_html(text: str) -> str:
-    """Pass through HTML directly."""
+    """Escape reserved HTML characters (except valid <b> tags."""
+    # First escape &, then unescape <b> and </b>
+    text = text.replace("&", "&amp;")
+    text = text.replace("<", "&lt;")
+    text = text.replace(">", "&gt;")
+    text = text.replace("&lt;b&gt;", "<b>")
+    text = text.replace("&lt;/b&gt;", "</b>")
     return text
 
 
