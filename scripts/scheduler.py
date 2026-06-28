@@ -13,7 +13,7 @@ from agent.narrative_agent import generate_narrative_report
 from agent.pipeline import run_reliability_mode
 from config.settings import LOG_DIR
 from tools.telegram import send_telegram_message
-from tools.alerts import evaluate_alerts, get_sell_signals
+from tools.alerts import evaluate_alerts, get_sell_signals, get_buy_signals
 from tools.prices import get_stock_price
 from tools.portfolio import load_portfolio_groups
 
@@ -85,6 +85,12 @@ def run_pipeline_once(force: bool = False):
         sell_signals = get_sell_signals(facts.get("position_tags", []), price_dict)
         for sig in sell_signals:
             print(f"[SELL] {sig['ticker']}: {sig['label']} ({sig['score']}/4)")
+            send_telegram_message(sig["message"])
+            
+        # 3. Fire buy signals (multi-factor confirmation)
+        buy_signals = get_buy_signals(facts.get("position_tags", []), price_dict)
+        for sig in buy_signals:
+            print(f"[BUY]  {sig['ticker']}: {sig['label']} ({sig['score']}/4)")
             send_telegram_message(sig["message"])
     else:
         summary = "[SCHEDULER] Pipeline returned no verified result."
