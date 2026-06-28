@@ -1,10 +1,13 @@
 
 import json
 import os
-from datetime import date, datetime
-from tools.alerts import get_technical_score, get_bullish_score
+from datetime import date
+from tools.alerts import get_technical_score
 
-THESIS_STATE_FILE = "state/thesis_state.json"
+
+def _get_thesis_state_file():
+    return os.environ.get("THESIS_STATE_FILE", "state/thesis_state.json")
+
 
 BROKEN_KEYWORDS = [
     "headwinds", "slowing", "losing share",
@@ -19,98 +22,149 @@ INTACT_KEYWORDS = [
 
 
 def _load_thesis_state() -> dict:
-    if os.path.exists(THESIS_STATE_FILE):
-        with open(THESIS_STATE_FILE, "r", encoding="utf-8") as f:
+    if os.path.exists(_get_thesis_state_file()):
+        with open(_get_thesis_state_file()) as f:
             return json.load(f)
     return {}
 
 
 def _save_thesis_state(state: dict):
     os.makedirs("state", exist_ok=True)
-    with open(THESIS_STATE_FILE, "w", encoding="utf-8") as f:
+    with open(_get_thesis_state_file(), "w") as f:
         json.dump(state, f, indent=2)
 
 
-def _persist(state: dict, ticker: str, status: str, today: str, watch_streak: int = 0) -> str:
+def _persist(state: dict, ticker: str,
+             status: str, today: str,
+             watch_streak: int = 0) -> str:
     state[ticker] = {
         "status": status,
+        "updated": today,
         "watch_streak": watch_streak,
-        "last_updated": today,
-        "timestamp": datetime.now().isoformat()
     }
     _save_thesis_state(state)
     return status
+
+
+def _score_news(headlines: list,
+                keywords: list) -> int:
+    return sum(
+        1 for h in headlines
+        if any(k in h.lower() for k in keywords)
+    )
 
 
 def evaluate_thesis(
     ticker: str,
     tag: str,
     technical: dict,
-    news_headlines: list[str],
+    news_headlines: list,
     critic_narrative: str = ""
 ) -> str:
     """
-    Returns: "Intact", "Watch", or "Broken"
-    Persists watch streak counter in thesis_state.json.
-    DEAD_WEIGHT and LEVERAGED always return "Broken".
+    Evaluate thesis_status for a single position.
+    Returns: "Intact", "Watch", or "Broken".
+    Persists watch_streak counter to thesis_state.json.
     """
     state = _load_thesis_state()
     today = date.today().isoformat()
-
-    # Tag overrides — no evaluation needed
-    if tag == "DEAD_WEIGHT":
-        return _persist(state, ticker, "Broken", today)
-    if tag == "LEVERAGED":
-        return _persist(state, ticker, "Broken", today)
-
     prev = state.get(ticker, {})
     prev_status = prev.get("status", "Intact")
     watch_streak = prev.get("watch_streak", 0)
 
-    # ── BROKEN conditions ──────────────────────────────
-    # B1: below MA200 AND 4/4 bearish
+    # If already Broken, stay Broken unless there's a strong reason to change
+    if prev_status == "Broken":
+        # Check for intact keywords to possibly restore
+        if critic_narrative:
+            low = critic_narrative.lower()
+            if sum(1 for k in INTACT_KEYWORDS if k in low) >= 2:
+                return _persist(state, ticker, "Intact", today, 0)
+        # Otherwise, stay Broken
+        return _persist(state, ticker, "Broken", today, 0)
+
+    # Tag overrides — no evaluation needed
+    if tag in ("DEAD_WEIGHT", "LEVERAGED"):
+        return _persist(state, ticker, "Broken", today, 0)
+
+    # BROKEN conditions
+    # B1: 4/4 bearish AND below MA200
     if (technical.get("score", 0) == 4 and
             not technical.get("price_bullish", True)):
         return _persist(state, ticker, "Broken", today, 0)
 
-    # B2: critic narrative says mandate broken
+    # B2: critic narrative has 2+ broken keywords
     if critic_narrative:
         low = critic_narrative.lower()
-        if any(k in low for k in BROKEN_KEYWORDS):
-            broken_hits = sum(
-                1 for k in BROKEN_KEYWORDS if k in low)
-            if broken_hits >= 2:
-                return _persist(
-                    state, ticker, "Broken", today, 0)
+        if sum(1 for k in BROKEN_KEYWORDS
+               if k in low) >= 2:
+            return _persist(
+                state, ticker, "Broken", today, 0)
 
-    # B3: three consecutive Watch sessions
+    # B3: Watch streak hit 3 consecutive sessions
     if prev_status == "Watch" and watch_streak >= 2:
         return _persist(state, ticker, "Broken", today, 0)
 
-    # ── WATCH conditions ───────────────────────────────
-    # W1: technical score 3/4 bearish
+    # WATCH conditions
+    # W1: technical score ≥3/4 bearish
     if technical.get("score", 0) >= 3:
-        new_streak = watch_streak + 1 if prev_status == "Watch" else 1
+        streak = watch_streak + 1 \
+            if prev_status == "Watch" else 1
         return _persist(
-            state, ticker, "Watch", today, new_streak)
+            state, ticker, "Watch", today, streak)
 
-    # W2: RSI < 40 AND MACD bearish simultaneously
+    # W2: RSI <40 AND MACD bearish simultaneously
     if (technical.get("rsi", 50) < 40 and
             technical.get("macd_bearish", False)):
-        new_streak = watch_streak + 1 if prev_status == "Watch" else 1
+        streak = watch_streak + 1 \
+            if prev_status == "Watch" else 1
         return _persist(
-            state, ticker, "Watch", today, new_streak)
+            state, ticker, "Watch", today, streak)
 
-    # W3: negative news 2 sessions in a row (check today)
-    neg_news_count = 0
-    for headline in news_headlines:
-        low_headline = headline.lower()
-        if any(k in low_headline for k in BROKEN_KEYWORDS):
-            neg_news_count += 1
-    if neg_news_count >= 1:
-        new_streak = watch_streak + 1 if prev_status == "Watch" else 1
+    # W3: 2+ negative news AND already in Watch/Broken
+    if (_score_news(news_headlines, BROKEN_KEYWORDS) >= 2
+            and prev_status in ("Watch", "Broken")):
+        streak = watch_streak + 1 \
+            if prev_status == "Watch" else 1
         return _persist(
-            state, ticker, "Watch", today, new_streak)
+            state, ticker, "Watch", today, streak)
 
-    # ── INTACT conditions (default) ────────────────────
-    return _persist(state, ticker, "Intact", today, 0)
+    # INTACT conditions
+    # I1: price above MA20 AND RSI >50
+    if (technical.get("rsi", 0) > 50 and
+            not technical.get("price_bearish", True)):
+        return _persist(
+            state, ticker, "Intact", today, 0)
+
+    # I2: critic confirms thesis (2+ intact keywords)
+    if critic_narrative:
+        low = critic_narrative.lower()
+        if sum(1 for k in INTACT_KEYWORDS
+               if k in low) >= 2:
+            return _persist(
+                state, ticker, "Intact", today, 0)
+
+    # Default: carry forward previous status
+    return _persist(
+        state, ticker, prev_status, today, watch_streak)
+
+
+def evaluate_all_thesis(
+    position_tags: list,
+    technicals: dict,
+    news_map: dict,
+    critic_narrative: str = ""
+) -> list:
+    """
+    Evaluate thesis for all positions.
+    Returns position_tags list with thesis_status added.
+    """
+    result = []
+    for pos in position_tags:
+        ticker = pos["ticker"]
+        tag = pos["tag"]
+        tech = technicals.get(ticker, {})
+        news = news_map.get(ticker, [])
+        status = evaluate_thesis(
+            ticker, tag, tech, news, critic_narrative)
+        result.append({**pos, "thesis_status": status})
+    return result

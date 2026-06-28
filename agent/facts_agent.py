@@ -191,26 +191,27 @@ def run_facts_pass() -> dict:
 
     # AI stack and position tags
     stack = classify_ai_stack(holdings, hk_holdings)
-    tags = tag_positions(holdings, hk_holdings, stack["ticker_layers"], stack["us_weights"], stack["hk_weights"])
+    position_tags = tag_positions(holdings, hk_holdings, stack["ticker_layers"], stack["us_weights"], stack["hk_weights"])
 
-    # Technical signals + thesis evaluation
-    us_tickers = list(us_portfolio.keys())
-    technical_signals = {}
-    ticker_news = {t: [] for t in us_tickers + list(hk_portfolio.keys())}
+    from tools.thesis import evaluate_all_thesis
+    from tools.alerts import get_technical_score
+
+    technicals = {
+        pos["ticker"]: get_technical_score(pos["ticker"])
+        for pos in position_tags
+    }
+    news_map = {}
     for n in news:
-        if n["ticker"] in ticker_news:
-            ticker_news[n["ticker"]].append(n["headline"])
-
-    for i, pos in enumerate(tags):
-        ticker = pos["ticker"]
-        technical = get_technical_score(ticker)
-        technical_signals[ticker] = technical
-        pos["thesis_status"] = evaluate_thesis(
-            ticker,
-            pos["tag"],
-            technical,
-            ticker_news.get(ticker, [])
-        )
+        ticker = n["ticker"]
+        if ticker not in news_map:
+            news_map[ticker] = []
+        news_map[ticker].append(n["headline"])
+    position_tags = evaluate_all_thesis(
+        position_tags,
+        technicals,
+        news_map,
+        critic_narrative=""
+    )
 
     # Final facts JSON
     facts = {
@@ -234,8 +235,7 @@ def run_facts_pass() -> dict:
         "rebalance_recommendations": rebalance_recommendations,
         "rebalance_note": rebalance_note,
         "ai_stack": stack["us_layer_weights"],
-        "position_tags": tags,
-        "technical_signals": technical_signals,
+        "position_tags": position_tags,
     }
 
     return facts
