@@ -279,16 +279,6 @@ DATA_DIR = os.path.join(_project_root, "data")
 
 
 def _load_dynamic() -> dict:
-    # Debug prints
-    print(f"[DEBUG] tools/portfolio.py: __file__ = {__file__}")
-    print(f"[DEBUG] tools/portfolio.py: _tools_dir = {_tools_dir}")
-    print(f"[DEBUG] tools/portfolio.py: _project_root = {_project_root}")
-    print(f"[DEBUG] tools/portfolio.py: DYNAMIC_PORTFOLIO_FILE = {DYNAMIC_PORTFOLIO_FILE}")
-    print(f"[DEBUG] tools/portfolio.py: exists? {os.path.exists(DYNAMIC_PORTFOLIO_FILE)}")
-    if os.path.exists(_project_root):
-        print(f"[DEBUG] tools/portfolio.py: _project_root contents: {os.listdir(_project_root)}")
-    if os.path.exists(os.path.join(_project_root, "data")):
-        print(f"[DEBUG] tools/portfolio.py: data/ contents: {os.listdir(os.path.join(_project_root, 'data'))}")
     with open(DYNAMIC_PORTFOLIO_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
 
