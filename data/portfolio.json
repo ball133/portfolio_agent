@@ -1,0 +1,112 @@
+{
+  "sleeves": {
+    "US": {
+      "currency": "USD",
+      "positions": [
+        {
+          "ticker": "NVDA",
+          "tag": "CORE",
+          "weight": 0.271,
+          "thesis_status": "Watch",
+          "thesis_note": "AI training backbone",
+          "scale_trigger": null,
+          "core_eligible_at": null,
+          "added_date": "2025-01-01"
+        },
+        {
+          "ticker": "TSM",
+          "tag": "CORE",
+          "weight": 0.237,
+          "thesis_status": "Intact",
+          "thesis_note": "AI silicon fab",
+          "scale_trigger": null,
+          "core_eligible_at": null,
+          "added_date": "2025-01-01"
+        },
+        {
+          "ticker": "GOOGL",
+          "tag": "CORE",
+          "weight": 0.291,
+          "thesis_status": "Watch",
+          "thesis_note": "Cloud platform + AI distribution layer",
+          "scale_trigger": null,
+          "core_eligible_at": null,
+          "added_date": "2025-01-01"
+        },
+        {
+          "ticker": "MSFT",
+          "tag": "SATELLITE",
+          "weight": 0.058,
+          "thesis_status": "Watch",
+          "thesis_note": "Azure + Copilot AI cloud; Burry long Apr 2026",
+          "scale_trigger": 400.0,
+          "core_eligible_at": 446.0,
+          "added_date": "2025-01-01"
+        },
+        {
+          "ticker": "AVGO",
+          "tag": "SATELLITE",
+          "weight": 0.057,
+          "thesis_status": "Intact",
+          "thesis_note": "Networking silicon; small position",
+          "scale_trigger": null,
+          "core_eligible_at": null,
+          "added_date": "2025-01-01"
+        },
+        {
+          "ticker": "IBM",
+          "tag": "DEAD_WEIGHT",
+          "weight": 0.085,
+          "thesis_status": "Broken",
+          "thesis_note": "No AI-infra mandate fit",
+          "scale_trigger": null,
+          "core_eligible_at": null,
+          "added_date": "2025-01-01"
+        }
+      ]
+    },
+    "HK": {
+      "currency": "HKD",
+      "positions": [
+        {
+          "ticker": "09988.HK",
+          "tag": "CORE",
+          "weight": 0.420,
+          "thesis_status": "Intact",
+          "thesis_note": "Chinese consumer platform",
+          "scale_trigger": null,
+          "core_eligible_at": null,
+          "added_date": "2025-01-01"
+        },
+        {
+          "ticker": "00700.HK",
+          "tag": "CORE",
+          "weight": 0.346,
+          "thesis_status": "Intact",
+          "thesis_note": "Chinese consumer platform",
+          "scale_trigger": null,
+          "core_eligible_at": null,
+          "added_date": "2025-01-01"
+        },
+        {
+          "ticker": "7226.HK",
+          "tag": "LEVERAGED",
+          "weight": 0.234,
+          "thesis_status": "Broken",
+          "thesis_note": "2x leveraged Hang Seng TECH ETF — EXIT",
+          "scale_trigger": null,
+          "core_eligible_at": null,
+          "added_date": "2025-01-01"
+        }
+      ]
+    }
+  },
+  "mandate": {
+    "style": "high-conviction AI infrastructure compounder",
+    "max_positions": 12,
+    "core_min_weight": 0.08,
+    "core_max_weight": 0.35,
+    "no_leveraged": true,
+    "review_cycle": "quarterly"
+  }
+}

@@ -271,7 +271,11 @@ def reset_performance_history(keep_latest=0):
 # ================================================
 from datetime import date
 
-DYNAMIC_PORTFOLIO_FILE = "data/portfolio.json"
+# Use absolute path based on this file's location
+_tools_dir = os.path.dirname(os.path.abspath(__file__))
+_project_root = os.path.dirname(_tools_dir)
+DYNAMIC_PORTFOLIO_FILE = os.path.join(_project_root, "data", "portfolio.json")
+DATA_DIR = os.path.join(_project_root, "data")
 
 
 def _load_dynamic() -> dict:
@@ -280,7 +284,7 @@ def _load_dynamic() -> dict:
 
 
 def _save_dynamic(data: dict):
-    os.makedirs("data", exist_ok=True)
+    os.makedirs(DATA_DIR, exist_ok=True)
     with open(DYNAMIC_PORTFOLIO_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=2)
 
